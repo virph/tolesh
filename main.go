@@ -51,7 +51,7 @@ func initParam() error {
 		flag.BoolVar(&param.FetchParam.UseSample, "s", false, "Use sample")
 	case "list":
 		param.ListParam = new(ListParam)
-		flag.StringVar(&param.ListParam.Hostgroup, "g", "", "Hostgroup")
+		flag.StringVar(&param.ListParam.Hostgroup, "g", "all", "Hostgroup")
 		flag.StringVar(&param.ListParam.Type, "t", "all", "Type")
 	case "copy":
 		param.CopyParam = new(CopyParam)
@@ -106,7 +106,9 @@ func main() {
 
 		switch param.Command {
 		case "list":
-			log.Println("Running list")
+			if err := commandListConfig(ctx); err != nil {
+				log.Fatalln(err)
+			}
 		case "copy":
 			if err := commandCopyConfig(ctx); err != nil {
 				log.Fatalln(err)
