@@ -53,7 +53,7 @@ func commandFetchServers(ctx context.Context) error {
 		log.Println("Nodes result JSON:", nodes.toJSON())
 	}
 
-	writeFile("./tsh-ls_result.txt", output)
+	writeFile(fmt.Sprintf("%s/tsh-ls_result.txt", param.DataPath), output)
 
 	return nil
 }

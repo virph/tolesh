@@ -14,7 +14,8 @@ var (
 	param    *Param
 	nodesMap NodesMap
 
-	validCommands = []string{"fetch", "list", "copy", "iterm"}
+	validCommands   = []string{"fetch", "list", "copy", "iterm"}
+	defaultDataPath = fmt.Sprintf("%s/.tolesh", os.Getenv("HOME"))
 )
 
 const (
@@ -42,7 +43,7 @@ func initParam() error {
 
 	// default attributes
 	flag.BoolVar(&param.Verbose, "v", false, "Print verbose log")
-	flag.StringVar(&param.DataPath, "p", ".", "Data path")
+	flag.StringVar(&param.DataPath, "p", defaultDataPath, "Data path")
 
 	// command-specific attributes
 	switch param.Command {
@@ -87,6 +88,13 @@ func main() {
 	}
 	if param.Verbose {
 		log.Println("Requested param:", param.toJSON())
+	}
+
+	// init default path
+	if param.DataPath == defaultDataPath {
+		if err := os.MkdirAll(param.DataPath, 0755); err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	initNodesMap()

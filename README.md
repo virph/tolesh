@@ -1,7 +1,7 @@
 # Tole SH
 Tole SH is a program to enable easy remote to the server.
 
-Usage: `./tolesh <command> [arguments]`
+Usage: `tolesh <command> [arguments]`
 
 The commands are:
 - fetch: fetch the server nodes information with `tsh ls` command
