@@ -22,3 +22,6 @@ go.work
 
 config*
 tolesh
+node-cache.json
+tsh-ls_result.txt
+*.scpt

@@ -1,8 +1,11 @@
 package main
 
-import "os"
+import (
+	"io/ioutil"
+	"os"
+)
 
-func writeConfig(path, data string) error {
+func writeFile(path, data string) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -13,4 +16,30 @@ func writeConfig(path, data string) error {
 	}
 
 	return f.Sync()
+}
+
+func readFile(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	d, err := ioutil.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+
+	return string(d), nil
+}
+
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }

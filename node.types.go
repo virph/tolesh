@@ -8,17 +8,6 @@ import (
 	"strings"
 )
 
-type Param struct {
-	UseSample  bool   `json:"use_sample"`
-	Verbose    bool   `json:"verbose"`
-	ConfigPath string `json:"config_path"`
-}
-
-func (p *Param) toJSON() string {
-	b, _ := json.Marshal(p)
-	return string(b)
-}
-
 type NodeLabel struct {
 	Label string `json:"label"`
 	Value string `json:"value"`
@@ -88,19 +77,21 @@ func (n *Node) GetLabel(str string) *NodeLabel {
 	return nil
 }
 
+type NodesMap map[string][]Node
+
 type NodeData struct {
-	Nodes []Node `json:"nodes"`
+	Nodes    []Node   `json:"nodes"`
+	NodesMap NodesMap `json:"nodes_map"`
+}
+
+func (nm NodesMap) toJSON() string {
+	b, _ := json.Marshal(nm)
+	return string(b)
 }
 
 func (nd *NodeData) toConfigString() string {
-	// group by hostgroup
-	nodesByHostgroup := make(map[string][]Node, 0)
-	for _, n := range nd.Nodes {
-		nodesByHostgroup[n.Hostgroup] = append(nodesByHostgroup[n.Hostgroup], n)
-	}
-
 	buff := bytes.NewBufferString("")
-	for hostgroup, nodes := range nodesByHostgroup {
+	for hostgroup, nodes := range nd.NodesMap {
 		buff.WriteString(fmt.Sprintf("[%s]\n", hostgroup))
 		for _, n := range nodes {
 			buff.WriteString(fmt.Sprintf("root@%s\n", n.ID))
@@ -109,7 +100,7 @@ func (nd *NodeData) toConfigString() string {
 	}
 
 	str := buff.String()
-	if PARAM.Verbose {
+	if param.Verbose {
 		fmt.Println("Config String:", str)
 	}
 
@@ -129,7 +120,19 @@ func (nd *NodeData) BuildEmpty() *NodeData {
 
 func (nd *NodeData) BuildFromString(str string) *NodeData {
 	nd = nd.BuildEmpty()
-	return nd.buildFromString(str)
+	nd = nd.buildFromString(str)
+	nd = nd.mapNodesByHostgroup()
+
+	return nd
+}
+
+func (nd *NodeData) mapNodesByHostgroup() *NodeData {
+	nd.NodesMap = make(map[string][]Node, 0)
+	for _, n := range nd.Nodes {
+		nd.NodesMap[n.Hostgroup] = append(nd.NodesMap[n.Hostgroup], n)
+	}
+
+	return nd
 }
 
 func (nd *NodeData) buildFromString(str string) *NodeData {

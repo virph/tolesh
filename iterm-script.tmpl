@@ -1,0 +1,64 @@
+
+tell application "iTerm"
+    activate
+
+    set numOfWindow to [[.NumberOfHost]]
+    set W to create window with default profile
+    set T to W's current tab
+
+    tell T's session 1
+        if numOfWindow >= 4 then
+            split horizontally with default profile
+        end if
+
+        if numOfWindow >= 7 then
+            split horizontally with default profile
+        end if
+    end tell
+
+    if numOfWindow >= 2 then
+        tell T's session 1
+            if numOfWindow >= 2 then
+                split vertically with default profile
+            end if
+            
+            if numOfWindow >= 3 and numOfWindow is not 4 then
+                split vertically with default profile
+            end if
+        end tell
+    end if
+
+    if numOfWindow = 4 then
+        tell T's session 3
+            split vertically with default profile
+        end tell
+    end if
+
+    if numOfWindow > 4 then
+        tell T's session 4
+            if numOfWindow > 4 then
+                split vertically with default profile
+            end if
+            
+            if numOfWindow >= 6 then
+                split vertically with default profile
+            end if
+        end tell
+    end if
+
+    if numOfWindow > 7 then
+        tell T's session 7
+            if numOfWindow >= 8 then
+                split vertically with default profile
+            end if
+            
+            if numOfWindow >= 9 then
+                split vertically with default profile
+            end if
+        end tell
+    end if
+
+    [[range $host := .Hosts]]
+    write T's session [[$host.Session]] text "tsh ssh --auth=gsuite --proxy=teleport.tokopedia.net [[$host.Host]]"
+    [[end]]
+end tell

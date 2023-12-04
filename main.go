@@ -2,64 +2,121 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
-	"os/exec"
-	"sync"
+	"log"
+	"os"
 )
 
-var PARAM *Param
+var (
+	param    *Param
+	nodesMap NodesMap
 
-func init() {
-	PARAM = &Param{}
+	validCommands = []string{"fetch", "list", "copy", "iterm"}
+)
 
-	flag.BoolVar(&PARAM.UseSample, "usesample", false, "Use sample")
-	flag.BoolVar(&PARAM.Verbose, "v", false, "Verbose")
-	flag.StringVar(&PARAM.ConfigPath, "path", "config", "Config file path")
+const (
+	cachePath = "node-cache.json"
+)
 
-	flag.Parse()
+func initParam() error {
+	if len(os.Args) < 2 {
+		return errors.New("invalid input")
+	}
+
+	param = &Param{
+		Command: os.Args[1],
+	}
+	isValidCommand := false
+	for _, c := range validCommands {
+		if param.Command == c {
+			isValidCommand = true
+			break
+		}
+	}
+	if !isValidCommand {
+		return errors.New("unknown command")
+	}
+
+	// default attributes
+	flag.BoolVar(&param.Verbose, "v", false, "Print verbose log")
+	flag.StringVar(&param.DataPath, "p", ".", "Data path")
+
+	// command-specific attributes
+	switch param.Command {
+	case "fetch":
+		param.FetchParam = new(FetchParam)
+		flag.BoolVar(&param.FetchParam.UseSample, "s", false, "Use sample")
+	case "list":
+		param.ListParam = new(ListParam)
+		flag.StringVar(&param.ListParam.Hostgroup, "g", "", "Hostgroup")
+		flag.StringVar(&param.ListParam.Type, "t", "all", "Type")
+	case "copy":
+		param.CopyParam = new(CopyParam)
+		flag.StringVar(&param.CopyParam.DestinationPath, "d", "", "Destination path")
+	case "iterm":
+		param.ItermParam = new(ItermParam)
+		flag.StringVar(&param.ItermParam.Hostgroup, "g", "", "Hostgroup")
+		flag.StringVar(&param.ItermParam.Username, "u", "root", "Username")
+		flag.IntVar(&param.ItermParam.NumOfHost, "n", 1, "Number of hosts, max 9")
+	}
+
+	return flag.CommandLine.Parse(os.Args[2:])
+}
+
+func initNodesMap() error {
+	strNodesMap, err := readFile(fmt.Sprintf("%s/%s", param.DataPath, cachePath))
+	if err != nil {
+		return err
+	}
+
+	nodesMap = make(NodesMap, 0)
+	if err := json.Unmarshal([]byte(strNodesMap), &nodesMap); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func main() {
 	ctx := context.Background()
-	if PARAM.Verbose {
-		fmt.Println("Param:", PARAM.toJSON())
+
+	if err := initParam(); err != nil {
+		log.Fatalln(err)
+	}
+	if param.Verbose {
+		log.Println("Requested param:", param.toJSON())
 	}
 
-	var wg sync.WaitGroup
-	output := ""
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		if PARAM.UseSample {
-			output = sample
-			return
+	initNodesMap()
+	// run the application command
+	if param.Command == "fetch" {
+		// fetch
+		if err := commandFetchServers(ctx); err != nil {
+			log.Fatalln(err)
 		}
 
-		cmd := exec.CommandContext(ctx, "tsh", "ls", "-v")
-		o, err := cmd.Output()
-		if err != nil {
-			fmt.Println("Err: ", err)
-			return
+	} else {
+		// check nodes map data first
+		if nodesMap == nil || len(nodesMap) == 0 {
+			log.Fatalln("Failed to get node data from cache. Try to do \"fetch\" first")
 		}
-		output = string(o)
-	}()
 
-	fmt.Println("Waiting \"tsh ls -v\" command result...")
-	wg.Wait()
-
-	// process
-	fmt.Println("Processing data...")
-	nodes := new(NodeData).BuildFromString(output)
-	if PARAM.Verbose {
-		fmt.Println("Result:", nodes.toJSON())
+		switch param.Command {
+		case "list":
+			log.Println("Running list")
+		case "copy":
+			if err := commandCopyConfig(ctx); err != nil {
+				log.Fatalln(err)
+			}
+		case "iterm":
+			if err := commandIterm(ctx); err != nil {
+				log.Fatalln(err)
+			}
+		}
 	}
 
-	// write to file
-	fmt.Printf("Writing to config file [%s] ...\n", PARAM.ConfigPath)
-	writeConfig(PARAM.ConfigPath, nodes.toConfigString())
-
-	fmt.Println("Exit.")
+	log.Println("Exit.")
 }
