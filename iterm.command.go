@@ -45,7 +45,7 @@ func commandIterm(ctx context.Context) error {
 		return errors.New("invalid session number")
 	}
 
-	strScriptTemplate, err := readFile(fmt.Sprintf("%s/iterm-script.tmpl", param.DataPath))
+	strScriptTemplate, err := readFile("./iterm-script.tmpl")
 	if err != nil {
 		return err
 	}
