@@ -9,6 +9,7 @@ The commands are:
 - copy: copy the server nodes list to the desired path
 - iterm: open the server sessions using iTerm2 terminal
 
+It is required to login to the tsh prior to execute the tolesh.
 To use the `iterm` command, iTerm2 application is required.
 
 List of arguments:
