@@ -60,7 +60,6 @@ func initParam() error {
 		param.ItermParam = new(ItermParam)
 		flag.StringVar(&param.ItermParam.Hostgroup, "g", "", "Hostgroup")
 		flag.StringVar(&param.ItermParam.Username, "u", "root", "Username")
-		flag.IntVar(&param.ItermParam.NumOfHost, "n", 1, "Number of hosts, max 9")
 	}
 
 	return flag.CommandLine.Parse(os.Args[2:])
