@@ -1,20 +1,34 @@
-
-
 # Tole SH
+Tole SH is a program to enable easy remote to the server.
 
-Program to enable easy remote to the server.
+Usage: `./tolesh <command> [arguments]`
 
-Usage: `./tolesh [-v] [-printresult=true/false] [-path=[path to config file]]`
+The commands are:
+- fetch: fetch the server nodes information with `tsh ls` command
+- list: print the server nodes list
+- copy: copy the server nodes list to the desired path
+- iterm: open the server sessions using iTerm2 terminal
 
-Example: `./tolesh -path "/path/to/config/file" -v`
+To use the `iterm` command, iTerm2 application is required.
 
-Sample result:
-```
-[orderapp]
-root@eb2c0142-a376-4a80-8279-bf286f3d5f7f
+List of arguments:
+- Global arguments:
+	- v: print verbose logs (default: false)
+	- p: data path (default: current directory / ".")
+- Fetch command:
+	- s: use sample node list (default: false)
+- List command:
+	- g: hostgroup name (default: all)
+	- t: node type (default: all)
+- Copy command:
+	- d: destination path (required)
+- Iterm command:
+	- g: hostgroup name (required)
+	- u: username (default: root)
 
-[notifapp]
-root@1d046880-cb3a-43ff-b562-005d1b931136
-root@26761f0f-4a2a-4189-b15b-1e553155f2ed
-root@519a845a-5c3d-488a-8b8f-2f3253703f48
-```
+Example of commands:
+- `tolesh fetch -p "~/.tolesh"`
+- `tolesh list -g archiveapp`
+- `tolesh list -t elasticsearch`
+- `tolesh copy -d "~/some/new/place.txt"`
+- `tolesh iterm -g notifapp -u rut`
