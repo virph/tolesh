@@ -32,7 +32,8 @@ type CopyParam struct {
 }
 
 type ItermParam struct {
-	Hostgroup string `json:"hostgroup"`
-	NumOfHost int    `json:"num_of_host"`
-	Username  string `json:"username"`
+	Hostgroup  string `json:"hostgroup"`
+	NumOfHost  int    `json:"num_of_host"`
+	Username   string `json:"username"`
+	IsPickHost bool   `json:"is_pick_host"`
 }

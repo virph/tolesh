@@ -28,21 +28,48 @@ func commandIterm(ctx context.Context) error {
 		return errors.New("hostgroup is not exists")
 	}
 
-	numOfHost := len(nodesMap[param.ItermParam.Hostgroup])
-	maxSessions := 9
-	if numOfHost < maxSessions {
-		maxSessions = numOfHost
-	}
-	fmt.Printf("Number of hosts in [%s]: %d\n", param.ItermParam.Hostgroup, numOfHost)
-	fmt.Printf("Input number of session to run [min:1, max:%d]: ", maxSessions)
+	var (
+		nodes         = nodesMap[param.ItermParam.Hostgroup]
+		numOfHost     = len(nodes)
+		maxSessions   = 9
+		reqSessionNum = numOfHost
+		reqHostNum    = 1
 
-	reqSessionNum := numOfHost
-	if _, err := fmt.Scanf("%d", &reqSessionNum); err != nil {
-		return err
-	}
-	log.Printf("Requested number of session: %d\n", reqSessionNum)
-	if reqSessionNum < 1 || reqSessionNum > maxSessions {
-		return errors.New("invalid session number")
+		requestedHosts = make([]Node, 0)
+	)
+
+	if param.ItermParam.IsPickHost {
+		fmt.Printf("List host of [%s] hostgroup:\n", param.ItermParam.Hostgroup)
+		fmt.Printf("| %-3s | %-36s | %-20s |\n", "Num", "Node ID", "Address")
+		for i := 0; i < numOfHost; i++ {
+			fmt.Printf("| %3d | %-36s | %20s |\n", (i + 1), nodes[i].ID, nodes[i].Address)
+		}
+		fmt.Printf("Input the host number [min:1, max:%d]: ", len(nodes))
+		if _, err := fmt.Scanf("%d", &reqHostNum); err != nil {
+			return err
+		}
+		log.Printf("Requested host number: %d\n", reqHostNum)
+		if reqHostNum < 1 || reqHostNum > len(nodes) {
+			return errors.New("invalid host number")
+		}
+
+		requestedHosts = append(requestedHosts, nodes[reqHostNum-1])
+	} else {
+		if numOfHost < maxSessions {
+			maxSessions = numOfHost
+		}
+		fmt.Printf("Number of hosts in [%s]: %d\n", param.ItermParam.Hostgroup, numOfHost)
+		fmt.Printf("Input number of session to run [min:1, max:%d]: ", maxSessions)
+
+		if _, err := fmt.Scanf("%d", &reqSessionNum); err != nil {
+			return err
+		}
+		log.Printf("Requested number of session: %d\n", reqSessionNum)
+		if reqSessionNum < 1 || reqSessionNum > maxSessions {
+			return errors.New("invalid session number")
+		}
+
+		requestedHosts = append(requestedHosts, nodes[:reqSessionNum]...)
 	}
 
 	strScriptTemplate, err := readFile("./iterm-script.tmpl")
@@ -62,11 +89,7 @@ func commandIterm(ctx context.Context) error {
 			Host    string
 		}{},
 	}
-	for _, node := range nodesMap[param.ItermParam.Hostgroup] {
-		if templateParam.NumberOfHost >= reqSessionNum {
-			break
-		}
-
+	for _, node := range requestedHosts {
 		templateParam.Hosts = append(templateParam.Hosts, struct {
 			Session int
 			Host    string

@@ -9,7 +9,7 @@ import (
 func commandListConfig(ctx context.Context) error {
 	log.Println("Running list")
 
-	fmt.Printf("%s, %s, %s\n", "Node Name", "Node ID", "Address")
+	fmt.Printf("| %-55s | %-36s | %-20s |\n", "Node Name", "Node ID", "Address")
 	if param.ListParam.Hostgroup == "all" {
 		for _, nodes := range nodesMap {
 			for _, node := range nodes {
@@ -18,7 +18,7 @@ func commandListConfig(ctx context.Context) error {
 					continue
 				}
 
-				fmt.Printf("%s, %s, %s\n", node.Name, node.ID, node.Address)
+				fmt.Printf("| %-55s | %-36s | %20s |\n", node.Name, node.ID, node.Address)
 			}
 		}
 	} else {
@@ -28,7 +28,7 @@ func commandListConfig(ctx context.Context) error {
 				continue
 			}
 
-			fmt.Printf("%s,%s,%s\n", node.Name, node.ID, node.Address)
+			fmt.Printf("| %-55s | %-36s | %20s |\n", node.Name, node.ID, node.Address)
 		}
 	}
 
